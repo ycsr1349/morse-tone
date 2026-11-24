@@ -37,8 +37,10 @@ accessibility tool, or a game that plays telegraph audio.
 
 Listen to the sample: [`examples/sos.wav`](examples/sos.wav) (SOS, 20 wpm, 600 Hz).
 
-There is a dependency-free demo in [`demo/index.html`](demo/index.html). Run it with
-any static server, for example `npx serve .` then open `/demo/`.
+**[Listen to it online](https://ycsr1349.github.io/morse-tone/)** — type text, drag
+the speed and tone sliders, play it, download the WAV. The demo is
+[`demo/index.html`](demo/index.html) and has no dependencies; to run it locally,
+`npx serve .` and open `/demo/`.
 
 ## Timing, spelled out
 
