@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>morse-tone demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: #0d1117;
+    color: #e6edf3;
+    font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  main { width: min(680px, 92vw); padding: 32px 0; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.02em; }
+  p.sub { color: #8b949e; margin: 0 0 24px; font-size: 14px; }
+  textarea {
+    width: 100%;
+    min-height: 96px;
+    padding: 12px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid #30363d;
+    background: #161b22;
+    color: inherit;
+    font: 15px/1.5 ui-monospace, monospace;
+    resize: vertical;
+  }
+  .row { display: flex; gap: 20px; margin: 18px 0; flex-wrap: wrap; }
+  .row label { flex: 1 1 200px; font-size: 13px; color: #8b949e; }
+  .row input[type=range] { width: 100%; }
+  .value { color: #e6edf3; font-variant-numeric: tabular-nums; }
+  .buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+  button {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    background: #21262d;
+    color: #e6edf3;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button.primary { background: #1f6feb; border-color: #1f6feb; }
+  button:hover { filter: brightness(1.15); }
+  pre {
+    margin: 20px 0 0;
+    padding: 12px;
+    border-radius: 10px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #8b949e;
+  }
+  pre b { color: #e6edf3; font-weight: 500; }
+</style>
+</head>
+<body>
+<main>
+  <h1>morse-tone</h1>
+  <p class="sub">Morse audio with ITU-R M.1677-1 timing. Runs in the browser, no dependencies.</p>
+
+  <textarea id="text">CQ CQ DE M0ABC</textarea>
+
+  <div class="row">
+    <label>Speed — <span class="value" id="wpmValue">20</span> wpm
+      <input id="wpm" type="range" min="5" max="40" value="20">
+    </label>
+    <label>Tone — <span class="value" id="toneValue">600</span> Hz
+      <input id="tone" type="range" min="300" max="1000" step="50" value="600">
+    </label>
+  </div>
+
+  <div class="buttons">
+    <button class="primary" id="play">Play</button>
+    <button id="download">Download WAV</button>
+  </div>
+
+  <pre id="info"></pre>
+
+  <audio id="player" hidden></audio>
+</main>
+
+<script type="module">
+  import { toWav, toDots, durationMs } from "../dist/index.js";
+
+  const textEl = document.getElementById("text");
+  const wpmEl = document.getElementById("wpm");
+  const toneEl = document.getElementById("tone");
+  const wpmValue = document.getElementById("wpmValue");
+  const toneValue = document.getElementById("toneValue");
+  const info = document.getElementById("info");
+  const player = document.getElementById("player");
+
+  let lastUrl = null;
+
+  function options() {
+    return { wpm: Number(wpmEl.value), tone: Number(toneEl.value) };
+  }
+
+  function refresh() {
+    const text = textEl.value;
+    wpmValue.textContent = wpmEl.value;
+    toneValue.textContent = toneEl.value;
+    info.innerHTML =
+      "<b>Dots:</b> " + (toDots(text) || "—") + "\n" +
+      "<b>Duration:</b> " + (durationMs(text, options()) / 1000).toFixed(2) + " s";
+  }
+
+  function buildUrl() {
+    const bytes = toWav(textEl.value, options());
+    const blob = new Blob([bytes], { type: "audio/wav" });
+    if (lastUrl !== null) URL.revokeObjectURL(lastUrl);
+    lastUrl = URL.createObjectURL(blob);
+    return lastUrl;
+  }
+
+  document.getElementById("play").addEventListener("click", () => {
+    player.src = buildUrl();
+    player.play();
+  });
+
+  document.getElementById("download").addEventListener("click", () => {
+    const url = buildUrl();
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "morse.wav";
+    link.click();
+  });
+
+  for (const element of [textEl, wpmEl, toneEl]) {
+    element.addEventListener("input", refresh);
+  }
+
+  refresh();
+</script>
+</body>
+</html>
