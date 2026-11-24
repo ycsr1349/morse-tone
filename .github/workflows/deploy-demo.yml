@@ -1,0 +1,51 @@
+name: deploy demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+      - run: npm test
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site/dist
+          cp dist/*.js _site/dist/
+          # The demo lives in demo/ and imports ../dist/index.js so it also works
+          # locally; on Pages it is served from the root, so rewrite that one path.
+          sed 's#\.\./dist/index\.js#./dist/index.js#' demo/index.html > _site/index.html
+          cp examples/sos.wav _site/sos.wav 2>/dev/null || true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
