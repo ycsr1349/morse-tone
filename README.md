@@ -1,5 +1,7 @@
 # morse-tone
 
+[![test](https://github.com/ycsr1349/morse-tone/actions/workflows/test.yml/badge.svg)](https://github.com/ycsr1349/morse-tone/actions/workflows/test.yml)
+
 Generate real Morse code audio with ITU-R M.1677-1 timing.
 
 Zero dependencies, TypeScript, works in Node and the browser. Turns text into a
